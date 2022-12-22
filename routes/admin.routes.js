@@ -124,9 +124,15 @@ module.exports = function (app, passport) {
                         newResult.push(ele.toJSON());    
                     });
                     newResult.forEach(ele => { 
+                        ele["totalProfit"] = 0;
                         if (ele.orders.length > 0) {
                             ele.orders.forEach(ord => {
                                 ord["totalProfit"] = (ord.openPrice - ord.currentPrice) * ord.volume;
+                            });
+                        }
+                        if (ele.positions.length > 0) {
+                            ele.positions.forEach(pos => {
+                                pos["totalProfit"] = (pos.openPrice - pos.currentPrice) * pos.volume;
                             });
                         }
                     });
