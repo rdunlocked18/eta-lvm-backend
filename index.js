@@ -67,7 +67,7 @@ const connectDB = async () => {
 connectDB();
 
 app.get("/", function (req, res, next) {
-    res.json({ msg: "API Working" });
+    res.json({ msg: "Backend API Working", version: "1.0" });
 });
 require("./routes/user.routes")(app, passport);
 require("./routes/admin.routes")(app, passport);

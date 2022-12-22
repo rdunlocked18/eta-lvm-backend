@@ -119,7 +119,18 @@ module.exports = function (app, passport) {
                 ],
             })
                 .then((result) => {
-                    res.json({ data: result });
+                    const newResult = [];
+                    result.forEach(ele => { 
+                        newResult.push(ele.toJSON());    
+                    });
+                    newResult.forEach(ele => { 
+                        if (ele.orders.length > 0) {
+                            ele.orders.forEach(ord => {
+                                ord["totalProfit"] = (ord.openPrice - ord.currentPrice) * ord.volume;
+                            });
+                        }
+                    });
+                    res.json({ data: newResult });
                 })
                 .catch((err) => {
                     console.log(err);
