@@ -14,12 +14,12 @@ module.exports = function (app, passport) {
     });
 
     //history orders
-    app.post(
-        "/api/meta/order",
+    app.get(
+        "/api/user/orders",
         [passport.authenticate("user_auth", { session: false })],
         async (req, res) => {
-            const accountId = req.body.accountId;
-            const authtoken = req.headers.metaauthtoken;
+            const accountId = req.user.accountId;
+            const authtoken = process.env.META_AUTH_TOKEN;
             try {
                 axios
                     .get(
@@ -86,8 +86,18 @@ module.exports = function (app, passport) {
                                 .catch((err) => {
                                     console.log(err);
                                 });
-                            console.log("success");
-                            res.json({ msg: "success" });
+                            await Order.findAll({
+                                where: { userId: req.user.id },
+                            })
+                                .then((orders) => {
+                                    // console.log(orders);
+                                    // res.json(orders);
+                                    console.log("success");
+                                    res.json({ msg: "success", orders });
+                                })
+                                .catch((err) => {
+                                    res.json(err);
+                                });
                         }
                     });
             } catch (error) {
@@ -95,28 +105,28 @@ module.exports = function (app, passport) {
             }
         }
     );
-    //get all orders
-    app.get(
-        "/api/user/orders",
-        [passport.authenticate("user_auth")],
-        async (req, res) => {
-            await Order.findAll()
-                .then((orders) => {
-                    console.log(orders);
-                    res.json(orders);
-                })
-                .catch((err) => {
-                    res.json(err);
-                });
-        }
-    );
+    // //get all orders
+    // app.get(
+    //     "/api/user/orders",
+    //     [passport.authenticate("user_auth")],
+    //     async (req, res) => {
+    //         await Order.findAll()
+    //             .then((orders) => {
+    //                 console.log(orders);
+    //                 res.json(orders);
+    //             })
+    //             .catch((err) => {
+    //                 res.json(err);
+    //             });
+    //     }
+    // );
     //sync positions
-    app.post(
-        "/api/meta/position",
+    app.get(
+        "/api/user/positions",
         [passport.authenticate("user_auth", { session: false })],
         async (req, res) => {
-            const accountId = req.body.accountId;
-            const authtoken = req.headers.metaauthtoken;
+            const accountId = req.user.accountId;
+            const authtoken = process.env.META_AUTH_TOKEN;
             try {
                 axios
                     .get(
@@ -178,38 +188,46 @@ module.exports = function (app, passport) {
                                 .catch((err) => {
                                     console.log(err);
                                 });
-                            console.log("success");
+                            // console.log("success");
                         }
                     });
-                res.json({ msg: "success" });
+                await Position.findAll({ where: { userId: req.user.id } })
+                    .then((position) => {
+                        // console.log(position);
+                        res.json({ position, msg: "success" });
+                    })
+                    .catch((err) => {
+                        res.json(err);
+                    });
+                // res.json({ msg: "success" });
             } catch (error) {
                 res.json({ msg: "error", error });
             }
         }
     );
-    //get all positions
-    app.get(
-        "/api/user/positions",
-        [passport.authenticate("user_auth")],
-        async (req, res) => {
-            await Position.findAll()
-                .then((position) => {
-                    console.log(position);
-                    res.json(position);
-                })
-                .catch((err) => {
-                    res.json(err);
-                });
-        }
-    );
+    // //get all positions
+    // app.get(
+    //     "/api/user/positions",
+    //     [passport.authenticate("user_auth")],
+    //     async (req, res) => {
+    //         await Position.findAll()
+    //             .then((position) => {
+    //                 console.log(position);
+    //                 res.json(position);
+    //             })
+    //             .catch((err) => {
+    //                 res.json(err);
+    //             });
+    //     }
+    // );
 
     //sync account information
-    app.post(
+    app.get(
         "/api/user/syncdash",
         [passport.authenticate("user_auth")],
         async (req, res) => {
-            const authtoken = req.headers.metaauthtoken;
-            const accountId = req.body.accountId;
+            const authtoken = process.env.META_AUTH_TOKEN;
+            const accountId = req.user.accountId;
             try {
                 axios
                     .get(
@@ -255,7 +273,6 @@ module.exports = function (app, passport) {
                                         })
                                         .then((result) => {
                                             console.log(result);
-                                            res.json({ msg: "success" });
                                         })
                                         .catch((err) => {
                                             console.log(err);
@@ -287,13 +304,21 @@ module.exports = function (app, passport) {
                                     })
                                         .then((result) => {
                                             console.log(result);
-                                            res.json({ msg: "success" });
                                         })
                                         .catch((err) => {
                                             console.log(err);
                                         });
                                 }
                                 // res.json(response.data);
+                            })
+                            .catch((error) => {
+                                res.json({ msg: "error", error });
+                            });
+                        await Dashboard.findOne({
+                            where: { userId: req.user.id },
+                        })
+                            .then((result) => {
+                                res.json({ result, msg: "success" });
                             })
                             .catch((error) => {
                                 res.json({ msg: "error", error });

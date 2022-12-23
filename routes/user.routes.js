@@ -2,6 +2,7 @@ const db = require("../models");
 const CryptoJS = require("crypto-js");
 const { checkDuplicate } = require("../controllers/checkDuplicate");
 const jwt = require("jsonwebtoken");
+const MetaTrader = db.MetaTrader;
 
 module.exports = function (app, passport) {
     app.use(function (req, res, next) {
@@ -110,7 +111,15 @@ module.exports = function (app, passport) {
         "/api/users/all",
         [passport.authenticate("admin_auth", { session: false })],
         async (req, res) => {
-            await User.findAll({ attributes: { exclude: ["password"] } })
+            await User.findAll({
+                include: [
+                    {
+                        model: MetaTrader,
+                        as: "metatrader",
+                    },
+                ],
+                attributes: { exclude: ["password"] },
+            })
                 .then((result) => {
                     res.json({ data: result });
                 })
@@ -121,22 +130,5 @@ module.exports = function (app, passport) {
         }
     );
 
-    //save Meta account Id
-    app.post(
-        "/api/users/meta/accountid",
-        [passport.authenticate("user_auth", { session: false })],
-        async (req, res) => {
-            await User.update(
-                { accountId: req.body.accountId },
-                { where: { id: req.user.id } }
-            )
-                .then(() => {
-                    res.json({ msg: "Meta account Id saved" });
-                })
-                .catch((err) => {
-                    console.log(err);
-                    res.json({ msg: ">> Error while saving data: ", err });
-                });
-        }
-    );
+
 };

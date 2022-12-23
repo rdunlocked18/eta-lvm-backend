@@ -120,19 +120,23 @@ module.exports = function (app, passport) {
             })
                 .then((result) => {
                     const newResult = [];
-                    result.forEach(ele => { 
-                        newResult.push(ele.toJSON());    
+                    result.forEach((ele) => {
+                        newResult.push(ele.toJSON());
                     });
-                    newResult.forEach(ele => { 
+                    newResult.forEach((ele) => {
                         ele["totalProfit"] = 0;
                         if (ele.orders.length > 0) {
-                            ele.orders.forEach(ord => {
-                                ord["totalProfit"] = (ord.openPrice - ord.currentPrice) * ord.volume;
+                            ele.orders.forEach((ord) => {
+                                ord["totalProfit"] =
+                                    (ord.openPrice - ord.currentPrice) *
+                                    ord.volume;
                             });
                         }
                         if (ele.positions.length > 0) {
-                            ele.positions.forEach(pos => {
-                                pos["totalProfit"] = (pos.openPrice - pos.currentPrice) * pos.volume;
+                            ele.positions.forEach((pos) => {
+                                pos["totalProfit"] =
+                                    (pos.openPrice - pos.currentPrice) *
+                                    pos.volume;
                             });
                         }
                     });
@@ -224,6 +228,24 @@ module.exports = function (app, passport) {
                 .catch((err) => {
                     console.log(err);
                     res.json({ msg: ">> Error while updating data: ", err });
+                });
+        }
+    );
+    //save Meta account Id
+    app.post(
+        "/api/admin/meta/linkaccid",
+        [passport.authenticate("admin_auth", { session: false })],
+        async (req, res) => {
+            await User.update(
+                { accountId: req.body.accountId },
+                { where: { id: req.body.userId } }
+            )
+                .then(() => {
+                    res.json({ msg: "Meta account Id saved" });
+                })
+                .catch((err) => {
+                    console.log(err);
+                    res.json({ msg: ">> Error while saving data: ", err });
                 });
         }
     );
