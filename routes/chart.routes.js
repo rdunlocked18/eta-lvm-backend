@@ -30,6 +30,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [week1, endDate] },
                 },
             })
@@ -52,6 +53,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [week2, week1] },
                 },
             })
@@ -74,6 +76,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [week3, week2] },
                 },
             })
@@ -96,6 +99,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [week4, week3] },
                 },
             })
@@ -118,6 +122,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [month1, endDate] },
                 },
             })
@@ -140,6 +145,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [month2, month1] },
                 },
             })
@@ -162,6 +168,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [month3, month2] },
                 },
             })
@@ -184,6 +191,7 @@ module.exports = function (app, passport) {
         async (req, res) => {
             await Order.findAll({
                 where: {
+                    userId:req.user.id,
                     createdAt: { [Op.between]: [month4, month3] },
                 },
             })
