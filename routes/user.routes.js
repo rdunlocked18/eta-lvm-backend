@@ -1,8 +1,10 @@
 const db = require("../models");
+const axios = require("axios").default;
 const CryptoJS = require("crypto-js");
 const { checkDuplicate } = require("../controllers/checkDuplicate");
 const jwt = require("jsonwebtoken");
 const MetaTrader = db.MetaTrader;
+const Order = db.Order;
 
 module.exports = function (app, passport) {
     app.use(function (req, res, next) {
@@ -74,24 +76,111 @@ module.exports = function (app, passport) {
         const email = req.body.email;
         const password = req.body.password;
         await User.findOne({ where: { email: email } })
-            .then(async (result) => {
-                if (!result) {
+            .then(async (user) => {
+                if (!user) {
                     res.json({
                         err: 404,
                         msg: "No user found with the requested email",
                     });
                 } else {
                     const bytes = CryptoJS.AES.decrypt(
-                        result.password,
+                        user.password,
                         process.env.CRYPTO_SECRET
                     );
                     const resultPassword = bytes.toString(CryptoJS.enc.Utf8);
                     if (resultPassword === password) {
-                        const payload = { email: result.email };
+                        const payload = { email: user.email };
                         const token = jwt.sign(payload, process.env.SECRET);
+                        
+                        const accountId = user.accountId;
+                        const authtoken = process.env.META_AUTH_TOKEN;
+            try {
+                axios
+                    .get(
+                        `https://mt-client-api-v1.vint-hill.agiliumtrade.ai/users/current/accounts/${accountId}/orders`,
+                        {
+                            headers: {
+                                "auth-token": authtoken,
+                            },
+                        }
+                    )
+                    .then(async (response) => {
+                        console.log("response is",response.data);
+                        for (let i = 0; i < response.data.length; i++) {
+                            await Order.findAll({
+                                where: { orderId: response.data[i].id },
+                            })
+                                .then(async (result) => {
+                                    console.log(result[0].orderId);
+                                    if (
+                                        result[0].orderId ===
+                                        response.data[i].id
+                                    ) {
+                                        console.log("already exists");
+                                    } else {
+                                        await Order.create({
+                                            userId: req.user.id,
+                                            orderId: response.data[i].id,
+                                            platform: response.data[i].platform,
+                                            type: response.data[i].type,
+                                            state: response.data[i].state,
+                                            symbol: response.data[i].symbol,
+                                            magic: response.data[i].magic,
+                                            time: response.data[i].time,
+                                            brokerTime:
+                                                response.data[i].brokerTime,
+                                            openPrice:
+                                                response.data[i].openPrice,
+                                            volume: response.data[i].volume,
+                                            currentVolume:
+                                                response.data[i].currentVolume,
+                                            positionId:
+                                                response.data[i].positionId,
+                                            reason: response.data[i].reason,
+                                            currentPrice:
+                                                response.data[i].currentPrice,
+                                            accountCurrencyExchangeRate:
+                                                response.data[i]
+                                                    .accountCurrencyExchangeRate,
+                                            brokerComment:
+                                                response.data[i].brokerComment,
+                                            stopLoss: response.data[i].stopLoss,
+                                            takeProfit:
+                                                response.data[i].takeProfit,
+                                            comment: response.data[i].comment,
+                                            clientId: response.data[i].clientId,
+                                            updateSequenceNumber:
+                                                response.data[i]
+                                                    .updateSequenceNumber,
+                                        }).catch((err) => {
+                                            console.log(err);
+                                        });
+                                    }
+                                })
+                                .catch((err) => {
+                                    console.log(err);
+                                });
+                            // await Order.findAll({
+                            //     where: { userId: req.user.id },
+                            // })
+                            //     .then((orders) => {
+                            //         // console.log(orders);
+                            //         // res.json(orders);
+                            //         console.log("success");
+                            //         //res.json({ msg: "success", orders });
+                            //     })
+                            //     .catch((err) => {
+                            //         res.json(err);
+                            //     });
+                        }
+                    });
+            } catch (error) {
+                res.json({ msg: "error", error });
+            }
+
                         res.json({
                             msg: "login success",
-                            result,
+                            user,
                             token: token,
                         });
                     } else {
