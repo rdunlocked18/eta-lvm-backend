@@ -5,6 +5,7 @@ const { checkDuplicate } = require("../controllers/checkDuplicate");
 const jwt = require("jsonwebtoken");
 const MetaTrader = db.MetaTrader;
 const Order = db.Order;
+const endDate = new Date(Date.now())
 
 module.exports = function (app, passport) {
     app.use(function (req, res, next) {
@@ -97,7 +98,7 @@ module.exports = function (app, passport) {
             try {
                 axios
                     .get(
-                        `https://mt-client-api-v1.vint-hill.agiliumtrade.ai/users/current/accounts/${accountId}/orders`,
+                        `https://metastats-api-v1.vint-hill.agiliumtrade.ai/users/current/accounts/${accountId}/historical-trades/2021-12-01/${endDate}?limit=1000&offset=0&updateHistory=true`,
                         {
                             headers: {
                                 "auth-token": authtoken,
@@ -106,52 +107,52 @@ module.exports = function (app, passport) {
                     )
                     .then(async (response) => {
                         console.log("response is",response.data);
-                        for (let i = 0; i < response.data.length; i++) {
+                        for (let i = 0; i < response.data.trades.length; i++) {
                             await Order.findAll({
-                                where: { orderId: response.data[i].id },
+                                where: { orderId: response.data.trades[i]._id },
                             })
                                 .then(async (result) => {
                                     console.log(result[0].orderId);
                                     if (
                                         result[0].orderId ===
-                                        response.data[i].id
+                                        response.data.trades[i]._id
                                     ) {
                                         console.log("already exists");
                                     } else {
                                         await Order.create({
                                             userId: req.user.id,
-                                            orderId: response.data[i].id,
-                                            platform: response.data[i].platform,
-                                            type: response.data[i].type,
-                                            state: response.data[i].state,
-                                            symbol: response.data[i].symbol,
-                                            magic: response.data[i].magic,
-                                            time: response.data[i].time,
-                                            brokerTime:
-                                                response.data[i].brokerTime,
+                                            orderId: response.data.trades[i]._id,
+                                            //platform: response.data.trades[i].platform,
+                                            type: response.data.trades[i].type,
+                                            //state: response.data.trades[i].state,
+                                            symbol: response.data.trades[i].symbol,
+                                            //magic: response.data.trades[i].magic,
+                                            //time: response.data.trades[i].time,
+                                            //brokerTime:
+                                                //response.data.trades[i].brokerTime,
                                             openPrice:
-                                                response.data[i].openPrice,
-                                            volume: response.data[i].volume,
-                                            currentVolume:
-                                                response.data[i].currentVolume,
+                                                response.data.trades[i].openPrice,
+                                            volume: response.data.trades[i].volume,
+                                            //currentVolume:
+                                                //response.data.trades[i].currentVolume,
                                             positionId:
-                                                response.data[i].positionId,
-                                            reason: response.data[i].reason,
-                                            currentPrice:
-                                                response.data[i].currentPrice,
-                                            accountCurrencyExchangeRate:
-                                                response.data[i]
-                                                    .accountCurrencyExchangeRate,
-                                            brokerComment:
-                                                response.data[i].brokerComment,
-                                            stopLoss: response.data[i].stopLoss,
+                                                response.data.trades[i].positionId,
+                                            //reason: response.data.trades[i].reason,
+                                            //currentPrice:
+                                                //response.data.trades[i].currentPrice,
+                                           // accountCurrencyExchangeRate:
+                                                //response.data.trades[i]
+                                                   // .accountCurrencyExchangeRate,
+                                            //brokerComment:
+                                                //response.data.trades[i].brokerComment,
+                                            //stopLoss: response.data.trades[i].stopLoss,
                                             takeProfit:
-                                                response.data[i].takeProfit,
-                                            comment: response.data[i].comment,
-                                            clientId: response.data[i].clientId,
-                                            updateSequenceNumber:
-                                                response.data[i]
-                                                    .updateSequenceNumber,
+                                                response.data.trades[i].profit,
+                                            //comment: response.data.trades[i].comment,
+                                            //clientId: response.data.trades[i].clientId,
+                                           // updateSequenceNumber:
+                                                //response.data.trades[i]
+                                                    //.updateSequenceNumber,
                                         }).catch((err) => {
                                             console.log(err);
                                         });
