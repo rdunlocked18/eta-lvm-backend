@@ -5,6 +5,12 @@ const { checkDuplicate } = require("../controllers/checkDuplicate");
 const jwt = require("jsonwebtoken");
 const MetaTrader = db.MetaTrader;
 const Order = db.Order;
+const dashboard = db.Dashboard;
+const position = db.Position;
+const user = db.User;
+const withdraw = db.Withdraw;
+const withdrawMethod = db.WithdrawMethod;
+const withdrawSetting = db.WithdrawSetting;
 const endDate = new Date(Date.now())
 
 module.exports = function (app, passport) {
@@ -16,6 +22,34 @@ module.exports = function (app, passport) {
         next();
     });
     const User = db.User;
+    
+    
+    
+    app.get("/api/auth/user",
+    [passport.authenticate("user_auth", { session: false })],
+    async(req,res)=>{
+        await user.findOne({where:{id:req.user.id}})
+        .then(async(user)=>{
+            await Order.findAll({where:{userId:req.user.id}})
+            .then(async(orders)=>{
+                await position.findAll({where:{userId:req.user.id}})
+                .then(async(positions)=>{
+                    await withdraw.findAll({where:{userId:req.user.id}})
+                    .then(async(withdrawals)=>{
+                        await withdrawMethod.findAll({where:{userId:req.user.id}})
+                        .then(async(withdrawalMethods)=>{
+                            await withdrawSetting.findAll({where:{userId:req.user.id}})
+                            .then(async(withdrawalsettings)=>{
+                                res.json({user,orders,positions,withdrawals,withdrawalMethods,withdrawalsettings})
+                                
+                            })
+                        })
+                    })
+                })
+            })
+        })
+
+    })
 
     app.post("/api/auth/signup", [checkDuplicate()], async (req, res) => {
         console.log(req.body);
